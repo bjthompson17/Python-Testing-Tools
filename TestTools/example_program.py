@@ -1,10 +1,6 @@
 """This is an example program for the unit test template to use"""
 import time
 
-import sys, os
-sys.path.append(os.path.dirname(__file__))
-import test_tools as unit_tests
-
 def main():
     """Program entry point."""
     for _ in range(5):
@@ -24,17 +20,4 @@ def long_function(some_input=None):
 
 
 if __name__ == "__main__":
-    call_pack = unit_tests.UnitTestPack(long_function, "Hi").config(
-        user_input=range(1,20),
-        timeout=10,
-        print_input=False
-    )
-    try:
-        call_pack()
-    # pylint: disable = W0718
-    except Exception:
-        pass
-    else:
-        print("Return:", call_pack.rval)
-        print("\nstdout: \n" + call_pack.stdout)
-        print("\nstderr: \n" + call_pack.stderr)
+    main()
