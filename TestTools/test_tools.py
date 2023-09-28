@@ -266,6 +266,7 @@ class UnitTestPack:
 
     def __call__(self) -> Any:
         print(f"{Tcolors.fg.blue}\tRunning test: {self.name} ...{Tcolors.default}")
+        self._success = False
         try:
             # if the timeout is not set or one of the specified debuggers is
             # debugging this code, run in main thread
