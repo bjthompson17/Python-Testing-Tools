@@ -1,7 +1,9 @@
 """This is an example program for the unit test template to use"""
-import time, sys
-sys.path.append(".")
-import TestTools.unit_test_tools as unit_tests
+import time
+
+import sys, os
+sys.path.append(os.path.dirname(__file__))
+import test_tools as unit_tests
 
 def main():
     """Program entry point."""
