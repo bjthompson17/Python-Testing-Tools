@@ -1,4 +1,4 @@
-"""This is a template program for reference on how to use the Python Test Tools
+"""This is an example program for reference on how to use the Python Test Tools
 as a standalone Testing system."""
 
 # pylint: disable = wrong-import-position
