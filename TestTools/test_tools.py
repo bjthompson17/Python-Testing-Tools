@@ -139,7 +139,7 @@ class UnitTestPack:
         self.stdout = ""
         self.stderr = ""
         self.rval = UnknownValue()
-        self._success = None
+        self._success = False
         self._diff_str = None
 
         # Set Defaults
