@@ -14,15 +14,15 @@ test = UnitTestPack(program.<'function_name'>, <'ordered arguments'>, ..., <'key
 
          name = <'test name'>,                         # Default is ""
          timeout = <'test timelimit in seconds'>,      # Default is 10, use -1 for no timelimit
-         user_input = <'Any iterable list/tuple of inputs'>, # Default is an empty tuple
+         user_input = <'Any iterable list/tuple of inputs'>,   # Default is an empty tuple
          print_input = <True/False>,                   # Default is True. Print user input to console.
          capture_input = <True/False>,                 # Default is True. Capture user input and prompt in std output comparison.
          print_out = <True/False>,                     # Default is True. Print stdout stream during execution.
          print_err = <True/False>,                     # Default is True. Print stderr stream during execution.
-         expect_out = <'expected output as a string'>, # Default is None. If left alone, will not compare std output.
-         expect_err = <'expected error output "" '>,   # Default is None. If left alone, will not compare err output.
-         expect_rval = <'expected return value'>,      # Default is UnknownValue. If left alone, will not compare return value.
-         
+         expect_out = <'expected stdout output as a string'>,   # Default is None. If left alone, will not compare std output.
+         expect_err = <'expected stderr output as a string'>,   # Default is None. If left alone, will not compare err output.
+         expect_rval = <'expected return value'>,      # Default is UnknownValue(). If left alone, will not compare return value.
+         expect_success = <True/False>                 # Default is True. Set to False if you expect this test to fail.
     )
 ...
 # To execute the test, just call it like a function
@@ -39,6 +39,12 @@ test.set_args(<'new arguments', ..., <'keyword arguments'> = <'values'>, ...)
 test.user_input = <'new list of user inputs'>
 test.expect_out = <'new expected output'>
 test.timeout = <'new timeout'>
+
+# or configured by calling test.config again.
+test.config(
+    name = <'new name'>
+    expect_success = <True/False>
+)
 
 # Running the test again will yeild different results
 test()
