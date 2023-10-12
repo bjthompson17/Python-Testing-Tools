@@ -1,13 +1,14 @@
 """Tools for testing user I/O and timeout tests"""
 # Limitations:
-#  - Functions and arguments to functions being run must be
 #  - Captured output must not exceed a reasonable length for a string!
 
 
 from typing import Callable, Any, Iterable
 from collections import namedtuple
 import builtins
-import multiprocessing
+import threading
+import queue
+import ctypes
 import sys
 import traceback
 
@@ -75,7 +76,7 @@ class UnexpectedInputError(UnitTestError):
     provided.
     """
 
-
+# Depricated
 class InputGenerator(Iterable):
     """Provides a generator for test inputs to a program requiring user
     input"""
@@ -122,9 +123,32 @@ class UnknownValue:
     """Dummy class to specify an untested value"""
 
 
+class ExceptionThread(threading.Thread):
+    """Special form of thread that terminates by raising an exception"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args,**kwargs)
+
+    def get_id(self):
+        """Returns id of the respective thread"""
+        if hasattr(self, '_thread_id'):
+            return self._thread_id
+        #pylint: disable=protected-access
+        for id_, thread in threading._active.items():
+            if thread is self:
+                return id_
+    def terminate(self):
+        """Terminates the thread by raising SystemExit"""
+        thread_id = self.get_id()
+        res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id,
+              ctypes.py_object(SystemExit))
+        if res > 1:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
+            print('Exception raise failure')
+
 class UnitTestPack:
     """Packs a Callable object with it's arguments so it can all be
-    transported together. The Callable and args must be picklable 
+    transported together. 
+    #### The Callable and args must be picklable \
     if using timouts.
     """
 
@@ -142,7 +166,7 @@ class UnitTestPack:
         self._success = False
         self._diff_str = None
 
-        # Set Defaults
+        # Set Default Configs
         self.name = ""
         self.timeout = 10
         self._user_input = tuple()
@@ -162,8 +186,8 @@ class UnitTestPack:
                capture_input: bool = None,
                print_out: bool = None,
                print_err: bool = None,
-               expect_out: str = None,
-               expect_err: str = None,
+               expect_out: str|list[str] = None,
+               expect_err: str|list[str] = None,
                expect_rval: Any = UnknownValue(),
                ):
         """Configures the attributes of the class and returns self.
@@ -185,9 +209,19 @@ class UnitTestPack:
         if capture_input is not None:
             self.capture_input = capture_input
         if expect_out is not None:
-            self.expect_out = expect_out
+            if isinstance(expect_out, str):
+                self.expect_out = expect_out
+            elif isinstance(expect_out, Iterable):
+                self.expect_out = '\n'.join(str(x) for x in expect_out) + '\n'
+            else:
+                self.expect_out = str(expect_out)
         if expect_err is not None:
-            self.expect_err = expect_err
+            if isinstance(expect_err, str):
+                self.expect_err = expect_err
+            elif isinstance(expect_err, Iterable):
+                self.expect_err = ''.join(str(x) + '\n' for x in expect_err)
+            else:
+                self.expect_err = str(expect_err)
         if print_out is not None:
             self.print_out = print_out
         if print_err is not None:
@@ -272,7 +306,7 @@ class UnitTestPack:
             # debugging this code, run in main thread
             if (
                 self.timeout is None
-                or self.timeout < 0
+                or self.timeout <= 0
                 # or "pydevd" in sys.modules
                 # or "pdb" in sys.modules
             ):
@@ -353,7 +387,7 @@ class UnitTestPack:
 
         return self.rval
 
-    def _start_task(self, return_queue: multiprocessing.Queue):
+    def _start_task(self, return_queue: queue.Queue):
         # pylint: disable = broad-exception-caught
         exception_state = None
         try:
@@ -373,9 +407,11 @@ class UnitTestPack:
         return_queue.put(self.stderr)
 
     def _run_as_task(self):
+
+
         # pylint: disable = invalid-name
-        ret_queue = multiprocessing.Queue()
-        p = multiprocessing.Process(target=self._start_task, args=(ret_queue,))
+        ret_queue = queue.Queue()
+        p = ExceptionThread(target=self._start_task, args=(ret_queue,))
 
         p.start()
 
@@ -387,16 +423,11 @@ class UnitTestPack:
         # If thread is still active
         if p.is_alive():
             # Terminate - may not work if process is stuck for good.
-            # Use "p.kill()" if that is the case
+            # IDK how to force if terminate doesn't work
 
             p.terminate()
             terminated = True
             # Give it some more time
-            p.join(float(self.timeout))
-
-        # If thread is really stuck, kill it
-        if p.is_alive():
-            p.kill()
             p.join()
 
         if terminated:
