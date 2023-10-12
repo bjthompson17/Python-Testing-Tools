@@ -137,7 +137,7 @@ class ExceptionThread(threading.Thread):
             if thread is self:
                 return id_
     def terminate(self):
-        """Terminates the thread by raising SystemExit"""
+        """Terminates the thread by raising SystemExit in the thread"""
         thread_id = self.get_id()
         res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id,
               ctypes.py_object(SystemExit))
@@ -163,7 +163,7 @@ class UnitTestPack:
         self.reset_results()
 
         # Set Defaults
-        self.name = ""
+        self.name = "Untitled"
         self.timeout = 10
         self._user_input = tuple()
         self.capture_input = True
@@ -187,17 +187,17 @@ class UnitTestPack:
     # Read only properties
     @property
     def stdout(self):
-        """diff_str is a read only property"""
+        """stdout is a read only property"""
         return self._stdout
 
     @property
     def stderr(self):
-        """diff_str is a read only property"""
+        """stderr is a read only property"""
         return self._stderr
 
     @property
     def rval(self):
-        """diff_str is a read only property"""
+        """rval is a read only property"""
         return self._rval
 
     @property
@@ -212,7 +212,7 @@ class UnitTestPack:
 
     @property
     def exception(self):
-        """Success is a read only property"""
+        """Exception is a read only property"""
         return self._exception
 
     def config(self,
@@ -350,7 +350,6 @@ class UnitTestPack:
                 # Otherwise, run in a timed thread
                 self._run_as_task()
         except Exception as exc:
-
             print(f"{Tcolors.fg.red}{exc.__class__.__name__}: {exc}{Tcolors.default}")
             print()
             self._exception = exc
@@ -359,6 +358,7 @@ class UnitTestPack:
             self._success, self._diff_str = self.get_diff()
 
         if self.success == self.expect_success:
+            self._success = True
             print(f"{Tcolors.fg.green}Success{Tcolors.default}")
         else:
             print(f"{Tcolors.fg.red}Failed{Tcolors.default}")
