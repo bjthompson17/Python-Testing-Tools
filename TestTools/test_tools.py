@@ -76,49 +76,6 @@ class UnexpectedInputError(UnitTestError):
     provided.
     """
 
-# Depricated
-class InputGenerator(Iterable):
-    """Depricated: Provides a generator for test inputs to a program requiring user
-    input"""
-
-    def __init__(self, *args):
-        self._values = list(args)
-        self._counter = 0
-        self._i = 0
-        self.print_input = True
-
-    def input(self, _prompt: str = ""):
-        """This function replaces builtins.input and raw_input"""
-        rval = None
-        if self._i < len(self._values):
-            rval = next(self)
-        else:
-            raise UnexpectedInputError(
-                "Program is asking for too many inputs."
-            )
-        if self.print_input:
-            print(f"{_prompt}{rval}")
-
-        return rval
-
-    def __iter__(self):
-        self._i = 0
-        return self
-
-    def __next__(self):
-        if self._i < len(self._values):
-            rval = self._values[self._i]
-            self._i += 1
-            return rval
-        raise StopIteration
-
-    def __getitem__(self, key):
-        return self._values[key]
-
-    def __len__(self):
-        return len(self._values)
-
-
 class UnknownValue:
     """Dummy class to specify an untested value"""
 
@@ -241,8 +198,6 @@ class UnitTestPack:
         if user_input is not None:
             self.user_input = user_input
         if print_input is not None:
-            if isinstance(user_input, InputGenerator):
-                self.user_input.print_input = print_input
             self.print_input = print_input
         if capture_input is not None:
             self.capture_input = capture_input
