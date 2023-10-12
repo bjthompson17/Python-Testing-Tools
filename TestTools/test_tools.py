@@ -78,7 +78,7 @@ class UnexpectedInputError(UnitTestError):
 
 # Depricated
 class InputGenerator(Iterable):
-    """Provides a generator for test inputs to a program requiring user
+    """Depricated: Provides a generator for test inputs to a program requiring user
     input"""
 
     def __init__(self, *args):
@@ -151,7 +151,7 @@ class UnitTestPack:
     #### The Callable and args must be picklable \
     if using timouts.
     """
-
+    #pylint: disable = attribute-defined-outside-init
     def __init__(self, func: Callable, *args, **kwds):
         # Pack function
         self.func = func
@@ -160,13 +160,9 @@ class UnitTestPack:
         self.run = self.__call__
 
         # Initialize Results
-        self.stdout = ""
-        self.stderr = ""
-        self.rval = UnknownValue()
-        self._success = False
-        self._diff_str = None
+        self.reset_results()
 
-        # Set Default Configs
+        # Set Defaults
         self.name = ""
         self.timeout = 10
         self._user_input = tuple()
@@ -177,6 +173,47 @@ class UnitTestPack:
         self.expect_out = None
         self.expect_err = None
         self.expect_rval = UnknownValue()
+        self.expect_success = True
+
+    def reset_results(self):
+        """Resets results and is called before each run."""
+        self._stdout = ""
+        self._stderr = ""
+        self._rval = UnknownValue()
+        self._success = False
+        self._diff_str = None
+        self._exception = None
+
+    # Read only properties
+    @property
+    def stdout(self):
+        """diff_str is a read only property"""
+        return self._stdout
+
+    @property
+    def stderr(self):
+        """diff_str is a read only property"""
+        return self._stderr
+
+    @property
+    def rval(self):
+        """diff_str is a read only property"""
+        return self._rval
+
+    @property
+    def success(self):
+        """Success is a read only property"""
+        return self._success
+
+    @property
+    def diff_str(self):
+        """diff_str is a read only property"""
+        return self._diff_str
+
+    @property
+    def exception(self):
+        """Success is a read only property"""
+        return self._exception
 
     def config(self,
                name: str = None,
@@ -189,6 +226,7 @@ class UnitTestPack:
                expect_out: str|list[str] = None,
                expect_err: str|list[str] = None,
                expect_rval: Any = UnknownValue(),
+               expect_success: bool = None
                ):
         """Configures the attributes of the class and returns self.
         Use for inline test configurations.\n
@@ -226,17 +264,9 @@ class UnitTestPack:
             self.print_out = print_out
         if print_err is not None:
             self.print_err = print_err
+        if expect_success is not None:
+            self.expect_success = expect_success
         return self
-
-    @property
-    def success(self):
-        """Success is a read only property"""
-        return self._success
-
-    @property
-    def diff_str(self):
-        """diff_str is a read only property"""
-        return self._diff_str
 
     @property
     def user_input(self):
@@ -299,14 +329,19 @@ class UnitTestPack:
         return self
 
     def __call__(self) -> Any:
+        #pylint: disable = broad-exception-caught
         print(f"{Tcolors.fg.blue}\tRunning test: {self.name} ...{Tcolors.default}")
-        self._success = False
+        self.reset_results()
         try:
             # if the timeout is not set or one of the specified debuggers is
             # debugging this code, run in main thread
             if (
                 self.timeout is None
                 or self.timeout <= 0
+
+                ## This was here to allow debugger to run without timing out
+                ## but VSCode's Pytest tool updated so it's always in debug mode.
+
                 # or "pydevd" in sys.modules
                 # or "pdb" in sys.modules
             ):
@@ -315,36 +350,44 @@ class UnitTestPack:
                 # Otherwise, run in a timed thread
                 self._run_as_task()
         except Exception as exc:
+
             print(f"{Tcolors.fg.red}{exc.__class__.__name__}: {exc}{Tcolors.default}")
             print()
-            raise exc
+            self._exception = exc
 
-        self._success, self._diff_str = self.get_diff()
+        if self.exception is None:
+            self._success, self._diff_str = self.get_diff()
 
-        if self.success:
+        if self.success == self.expect_success:
             print(f"{Tcolors.fg.green}Success{Tcolors.default}")
         else:
             print(f"{Tcolors.fg.red}Failed{Tcolors.default}")
+            if self.exception is not None:
+                raise self.exception
             print(self.diff_str)
         return self.rval
 
     def _run_in_main(self):
-        self.rval = None
         real_stdout_write = sys.stdout.write
         real_stderr_write = sys.stderr.write
         real_input = builtins.input
 
         # For some reason this only works if the counter is
         # a mutable object and not an integer
-        counter = [0]
+        class Counter:
+            """Mutable counter object"""
+            def __init__(self):
+                self.count = 0
+
+        counter = Counter()
         def fake_input(_prompt: str = ""):
-            if counter[0] >= len(self._user_input):
+            if counter.count >= len(self._user_input):
                 raise UnexpectedInputError("Program is asking for too many inputs!")
-            rval = self._user_input[counter[0]]
-            counter[0] += 1
+            rval = self._user_input[counter.count]
+            counter.count+= 1
             if self.print_input:
                 if self.capture_input:
-                    self.stdout += f"{_prompt}{rval}\n"
+                    self._stdout += f"{_prompt}{rval}\n"
                 else:
                     real_stdout_write(Tcolors.fg.dcyan)
                 real_stdout_write(
@@ -358,7 +401,7 @@ class UnitTestPack:
             Copies output to the stdout string and then passes
             the output to the original write function
             """
-            self.stdout += _s
+            self._stdout += _s
             if self.print_out:
                 real_stdout_write(_s)
 
@@ -367,7 +410,7 @@ class UnitTestPack:
             Copies error output to the stderr string and then passes
             the output to the original write function
             """
-            self.stderr += _s
+            self._stderr += _s
             if self.print_err:
                 real_stderr_write(Tcolors.fg.dmagenta + _s + Tcolors.default)
 
@@ -378,7 +421,8 @@ class UnitTestPack:
         sys.stderr.write = fake_stderr_write
 
         try:
-            self.rval = self.func(*self.args, **self.kwds)
+            # Breakpoint here to hold the debugger in a timed function
+            self._rval = self.func(*self.args, **self.kwds)
         finally:
             # Put everything back, even if there's an error
             builtins.input = real_input
@@ -435,9 +479,9 @@ class UnitTestPack:
 
         if not ret_queue.empty():
             exception = ret_queue.get()
-            self.rval = ret_queue.get()
-            self.stdout = ret_queue.get()
-            self.stderr = ret_queue.get()
+            self._rval = ret_queue.get()
+            self._stdout = ret_queue.get()
+            self._stderr = ret_queue.get()
             if exception is not None:
                 raise type(exception[0])(exception[1])
             return self.rval
