@@ -1,9 +1,9 @@
-"""This is an example program for reference on how to use the Python Test Tools
+"""This is a template program for reference on how to use the Python Test Tools
 as a standalone Testing system."""
 
 # pylint: disable = wrong-import-position
 
-from test_tools import UnitTestPack
+from test_tools import UnitTestPack, UnknownValue
 
 # Import test file as a module
 import example_program as program
@@ -14,7 +14,21 @@ import example_program as program
 
 tests = [
     UnitTestPack(program.main).config(
-        name = "Test case 1",
+        name = "Empty Test",
+        timeout = None,
+        user_input = None,
+        print_input = None,
+        capture_input = None,
+        print_out = None,
+        print_err = None,
+        expect_out = None,
+        expect_err = None,
+        expect_rval = UnknownValue(),
+        expect_success = None
+    ),
+
+    UnitTestPack(program.main).config(
+        name = "Example Main Test",
         user_input = (1, 2, 3, 4, 5),
         capture_input = False,
         expect_out = """\
@@ -25,6 +39,7 @@ Testing: 4
 Testing: 5
 """
     ),
+
     UnitTestPack(program.long_function,"Hello").config(
         name = "Timeout Test",
         timeout = 5,
@@ -34,11 +49,10 @@ Hello
 Hello
 Hello
 Hello
-"""
+""",
+        expect_success = False
     )
 ]
-
-expect = [True, False]
 
 if __name__ == "__main__":
     passed_tests = 0
@@ -48,9 +62,9 @@ if __name__ == "__main__":
         # Catch all Exceptions, this is a test system wrapper afterall.
         # pylint: disable = broad-exception-caught
         except Exception as err:
-            print(f"Test {i + 1} Error: {err}")
+            pass
 
-        if test.success == expect[i]:
+        if test.success:
             passed_tests += 1
 
     print(f"{passed_tests} / {len(tests)} test(s) passed.")
