@@ -1,0 +1,55 @@
+{
+    "tests":[
+        {
+            "function":"empty",
+            "args":[],
+            "kwargs":{},
+            "config":{
+                "name": "Empty Test",
+                "timeout": null,
+                "user_input":null,
+                "print_input": null,
+                "capture_input": null,
+                "print_out": null,
+                "print_err": null,
+                "expect_out": null,
+                "expect_err": null,
+                "expect_rval": "undefined",
+                "expect_success": null
+            }
+        },
+        {
+            "function":"main",
+            "config":{
+                "name":"Example Test",
+                "user_input":[1,2,3,4,5],
+                "capture_input":false,
+                "expect_out":[
+                    "Testing: 1",
+                    "Testing: 2",
+                    "Testing: 3",
+                    "Testing: 4",
+                    "Testing: 5"
+                ],
+                "expect_rval": "undefined"
+            }
+        },
+        {
+            "function":"long_function",
+            "args":["hello"],
+            "config":{
+                "name":"Timeout Test",
+                "timeout":5,
+                "expect_success": false
+            }
+        },
+        {
+            "function":"throw_error",
+            "args":["This function is throwing an error."],
+            "config":{
+                "name":"Error Test",
+                "expect_success": false
+            }
+        }
+    ]
+}
