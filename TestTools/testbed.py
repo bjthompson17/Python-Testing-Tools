@@ -7,6 +7,7 @@ import test_tools
 
 
 def get_args():
+    """Retreives arguments from the command line/terminal"""
     parser = argparse.ArgumentParser()
     parser.add_argument("filename")
     parser.add_argument("-v", "--version", action="version", version="1.0")
@@ -55,7 +56,10 @@ def read_test_file(filename):
             valid_data = False
             continue
 
-        # Convert rval
+        # Convert/remove rval as needed. This is because I cannot set the
+        # default value in a JSON file, so I defined a new undefined string
+        # along with a prefix 'r:' that allows setting the literal string
+        # 'undefined'
         rval_hold = test_data["config"].pop("expect_rval","undefined")
         if rval_hold != "undefined":
             if isinstance(rval_hold,str) and rval_hold.startswith("r:"):
@@ -98,7 +102,20 @@ def main():
 
     os.chdir(os.path.dirname(args.filename))
 
-    for test_settings in test_json["tests"]:
+    passed = 0
+    failed_tests = []
+    total_tests = len(test_json['tests'])
+    terminal_width = int(os.get_terminal_size().columns)
+    file_basename = os.path.basename(args.filename)
+    num_equals = int((terminal_width - len(file_basename))/2) - 1
+
+    print(test_tools.Tcolors.fg.yellow)
+    print(f"Running tests in {os.path.basename(args.testfile)} ...")
+
+    print(f"{'='*num_equals} {file_basename} {'='*num_equals}")
+    print(test_tools.Tcolors.default)
+
+    for num,test_settings in enumerate(test_json["tests"]):
         try:
             test = test_tools.UnitTestPack(
                 getattr(program, test_settings["function"]),
@@ -112,6 +129,25 @@ def main():
         #pylint: disable=broad-exception-caught
         except Exception:
             pass
+
+        if test.success:
+            passed += 1
+        else:
+            failed_tests.append(f"Test {num + 1}: {test.name}")
+
+    print(test_tools.Tcolors.fg.yellow)
+    print(f"{'='*(int(terminal_width/2)-5)} Finished {'='*(int(terminal_width/2)-5)}")
+
+    if passed == total_tests:
+        print(test_tools.Tcolors.fg.green,end='')
+    print(f"{passed}/{total_tests} Tests Passed")
+
+    if len(failed_tests) > 0:
+        print("Failed tests:")
+        print(test_tools.Tcolors.fg.red,end='')
+        for ftest in failed_tests:
+            print(f"\t{ftest}")
+    print(test_tools.Tcolors.default)
 
 
 if __name__ == "__main__":
