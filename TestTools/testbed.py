@@ -18,7 +18,7 @@ def get_args():
 
 
 def read_test_file(filename):
-    """Reads test JSON data"""
+    """Reads and sanitizes test JSON data. Returns None if file is not valid."""
     test_json = {}
     try:
         with open(filename, "r", encoding="utf-8") as file:
@@ -47,7 +47,7 @@ def read_test_file(filename):
             continue
         if "function" not in test_data:
             print(f'Error in test {num + 1} "{test_data["name"]}":'
-                  ' Each test must have a "function" section to run.')
+                  ' Each test must have a "function" section.')
             valid_data = False
             continue
         if "config" not in test_data:
@@ -105,7 +105,11 @@ def main():
     passed = 0
     failed_tests = []
     total_tests = len(test_json['tests'])
-    terminal_width = int(os.get_terminal_size().columns)
+    terminal_width = 80
+    try:
+        terminal_width = int(os.get_terminal_size().columns)
+    except OSError:
+        pass
     file_basename = os.path.basename(args.filename)
     num_equals = int((terminal_width - len(file_basename))/2) - 1
 
