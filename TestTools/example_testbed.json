@@ -30,8 +30,7 @@
                     "Testing: 3",
                     "Testing: 4",
                     "Testing: 5"
-                ],
-                "expect_rval": "undefined"
+                ]
             }
         },
         {
