@@ -13,7 +13,7 @@ import example_program as program
 # pylint: disable = missing-function-docstring
 
 tests = [
-    UnitTestPack(program.main).config(
+    UnitTestPack(program.empty).config(
         name = "Empty Test",
         timeout = None,
         user_input = None,
@@ -24,7 +24,7 @@ tests = [
         expect_out = None,
         expect_err = None,
         expect_rval = UnknownValue(),
-        expect_success = None
+        expect_success=None
     ),
 
     UnitTestPack(program.main).config(
@@ -50,7 +50,7 @@ Hello
 Hello
 Hello
 """,
-        expect_success = False
+        expect_success=False
     )
 ]
 
