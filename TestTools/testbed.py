@@ -13,11 +13,11 @@ def get_args():
     parser.add_argument(
         "-t", "--testfile", required=True, action="store", metavar="<test filename>"
     )
-    parser.add_argument("-o", "--outfile", action="store")
     return parser.parse_args()
 
 
 def read_test_file(filename):
+    """Reads test JSON data"""
     test_json = {}
     try:
         with open(filename, "r", encoding="utf-8") as file:
@@ -33,10 +33,44 @@ def read_test_file(filename):
         print('Error: JSON File must have a "tests" object.')
         return None
 
+    if not isinstance(test_json["tests"],list) or len(test_json["tests"]) <= 0:
+        print('Error: No tests found')
+        return None
+
+    valid_data = True
+    for num,test_data in enumerate(test_json["tests"]):
+        if not isinstance(test_data,dict):
+            print(f'Error in test {num + 1} "{test_data["name"]}":'
+                  ' Test must be a JSON obj')
+            valid_data = False
+            continue
+        if "function" not in test_data:
+            print(f'Error in test {num + 1} "{test_data["name"]}":'
+                  ' Each test must have a "function" section to run.')
+            valid_data = False
+            continue
+        if "config" not in test_data:
+            print(f'Error in test {num + 1} "{test_data["name"]}":'
+                  ' Each test must have a "config" section.')
+            valid_data = False
+            continue
+
+        # Convert rval
+        rval_hold = test_data["config"].pop("expect_rval","undefined")
+        if rval_hold != "undefined":
+            if isinstance(rval_hold,str) and rval_hold.startswith("r:"):
+                test_data["config"]["expect_rval"] = rval_hold[2:]
+            else:
+                test_data["config"]["expect_rval"] = rval_hold
+
+    if not valid_data:
+        return None
+
     return test_json
 
 
 def read_program(filename):
+    """Imports program file into it's own namespace"""
     if not os.path.exists(filename):
         print(f"Error: File {filename} does not exist")
         return None
@@ -68,8 +102,8 @@ def main():
         try:
             test = test_tools.UnitTestPack(
                 getattr(program, test_settings["function"]),
-                *test_settings["args"],
-                **test_settings["kwdargs"],
+                *(test_settings.get("args",[])),
+                **(test_settings.get("kwdargs",{})),
             ).config(**test_settings["config"])
             test()
         except KeyError as err:
