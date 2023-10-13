@@ -63,9 +63,51 @@ options:
   -v, --version                                  show program's version number and exit
   -t <test filename>, --testfile <test filename> *required* Path to the JSON file containing test configurations.
 ```
-The JSON file must be configured as follows:
+
+The JSON file has a specific configuration format. The following setup is the minimum requrement for this JSON file:
+
+Note: "config" contains the same key and value information as the `.config()` function above.
+
+```json
+{
+    "tests":[
+        {
+            "function":"<name of function to run>",
+            "config":{}
+        },
+    ]
+}
 ```
-to be continued...
+
+The above runs a test without sending any input and function arguments or expecting any output. It would only fail if an error is thrown. 
+
+The following JSON configuration file does *exactly the same thing*, but it has every possible element defined with it's default value:
+
+Note: `null` is used instead of `None` and "undefined" is used instead of UnknownValue. If you need to expect literal string "undefined" for the return value, use "r:undefined" instead. Anything past "r:" is interpreted literally.
+
+```json
+{
+    "tests":[
+        {
+            "function":"<name of function to run>",
+            "args":[],
+            "kwargs":{},
+            "config":{
+                "name": null,
+                "timeout": null,
+                "user_input":null,
+                "print_input": null,
+                "capture_input": null,
+                "print_out": null,
+                "print_err": null,
+                "expect_out": null,
+                "expect_err": null,
+                "expect_rval": "undefined",
+                "expect_success": null
+            }
+        }
+    ]
+}
 ```
 
 While you can just update the test parameters for all your tests, I recommend making a new test for each testcase.
