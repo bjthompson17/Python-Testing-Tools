@@ -4,6 +4,7 @@ The test_tools.py file features a few classes which make up a unique tool develo
 ## Usage
 Just follow the syntax in the example programs and you'll be rolling in no time! Here is some of the syntax for the things you may need to change in the example though for your convenience:
 
+### Test_tools.py
 ```python
 ...
 from <path.to.test_tools> import UnitTestPack
@@ -52,6 +53,13 @@ if test.success:
     print("Updated test succeeded!")
 ```
 Also included in this directory is a testbed program that can be run from the command line. To use it, you'll need to create a JSON file containing the test configurations for each test. Here's how to use the command in the terminal:
+
+
+While you can just update the test parameters for all your tests, I recommend making a new test for each testcase.
+
+### Testbed.py
+
+The testbed.py file has been added as a command line tool for those that wish to run their tests from the command prompt rather than write a python file for every test. To use testbed.py, you'll first need to create a JSON file containing the test configurations for each test. After that, you may execute the test by passing in the JSON test file and your Python script to test. The following is the command line help page for testbed.py:
 ```
 usage: python3 testbed.py [-h] [-v] -t <test filename> filename
 
@@ -61,7 +69,7 @@ positional arguments:
 options:
   -h, --help                                     show this help message and exit
   -v, --version                                  show program's version number and exit
-  -t <test filename>, --testfile <test filename> *required* Path to the JSON file containing test configurations.
+  -t <test filename>, --testfile <test filename> path to your JSON test file.
 ```
 
 The JSON file has a specific configuration format. The following setup is the minimum requrement for this JSON file:
@@ -109,7 +117,5 @@ Note: `null` is used instead of `None` and "undefined" is used instead of Unknow
     ]
 }
 ```
-
-While you can just update the test parameters for all your tests, I recommend making a new test for each testcase.
 
 **Have Fun!**
