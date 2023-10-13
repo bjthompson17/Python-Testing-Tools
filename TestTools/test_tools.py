@@ -104,10 +104,7 @@ class ExceptionThread(threading.Thread):
 
 class UnitTestPack:
     """Packs a Callable object with it's arguments so it can all be
-    transported together. 
-    #### The Callable and args must be picklable \
-    if using timouts.
-    """
+    transported together."""
     #pylint: disable = attribute-defined-outside-init
     def __init__(self, func: Callable, *args, **kwds):
         # Pack function
