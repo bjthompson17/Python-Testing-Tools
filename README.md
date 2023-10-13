@@ -52,8 +52,6 @@ test()
 if test.success:
     print("Updated test succeeded!")
 ```
-Also included in this directory is a testbed program that can be run from the command line. To use it, you'll need to create a JSON file containing the test configurations for each test. Here's how to use the command in the terminal:
-
 
 While you can just update the test parameters for all your tests, I recommend making a new test for each testcase.
 
