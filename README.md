@@ -115,5 +115,31 @@ Note: `null` is used instead of `None` and "undefined" is used instead of Unknow
     ]
 }
 ```
+There is one more catch to `expect_out` and `expect_err`, since you can't have multi-line strings in JSON, I've included to capablitity for it to concatenate lists of strings with '\n' characters. To include multiple lines of output for `expect_out`, do one of the following:
+
+```json
+{
+    "tests":[
+        {
+            "function":"main",
+            "config":{
+                "name":"Multi-line with lists",
+                "expect_out":[
+                    "Line 1",
+                    "Line 2",
+                    "Line 3"
+                ]
+            }
+        },
+        {
+            "function":"main",
+            "config":{
+                "name":"Multi-line with newline",
+                "expect_out":"Line 1\nLine 2\nLine 3\n"
+            }
+        }
+    ]
+}
+```
 
 **Have Fun!**
